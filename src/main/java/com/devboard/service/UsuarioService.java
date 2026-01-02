@@ -16,10 +16,7 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO salvarUsuario(UsuarioRequestDTO dto) {
-        var usuarioEntity = UsuarioMapper.toEntity(dto);
-        var usuarioSalvo = usuarioRepository.save(usuarioEntity);
-        var usuarioResponse = UsuarioMapper.toResponseDTO(usuarioSalvo);
-        return usuarioResponse;
+        var usuarioSalvo = usuarioRepository.save(UsuarioMapper.toEntity(dto));
+        return UsuarioMapper.toResponseDTO(usuarioSalvo);
     }
-
 }
