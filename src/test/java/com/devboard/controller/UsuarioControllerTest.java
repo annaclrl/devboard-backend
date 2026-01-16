@@ -43,8 +43,19 @@ class UsuarioControllerTest {
                     .content(objectMapper.writeValueAsString(usuario)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id_usuario").value(1));
-
-
     }
 
+    @Test
+    void deveRetornarBadRequestQuandoDadosInvalidos() throws Exception {
+        UsuarioRequestDTO usuarioInvalido = new UsuarioRequestDTO("", null, "123456");
+
+        mockMvc.perform(post("/usuarios")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(usuarioInvalido)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Erro de validação"))
+                .andExpect(jsonPath("$.errors.nome").exists())
+                .andExpect(jsonPath("$.errors.email").exists());
+    }
 }
