@@ -12,8 +12,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,5 +60,28 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.message").value("Erro de validação"))
                 .andExpect(jsonPath("$.errors.nome").exists())
                 .andExpect(jsonPath("$.errors.email").exists());
+    }
+
+    @Test
+    void deveListarTodosUsuarios() throws Exception {
+
+        // arrange
+        List<UsuarioResponseDTO> usuarios = List.of(
+                new UsuarioResponseDTO(1L, "Felipe", "felipe@email.com", "123456"),
+                new UsuarioResponseDTO(2L, "Anna", "anna@email.com", "123456")
+        );
+
+        when(usuarioService.listarTodosUsuarios()).thenReturn(usuarios);
+
+        // act & assert
+        mockMvc.perform(get("/usuarios")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id_usuario").value(1))
+                .andExpect(jsonPath("$[0].nome").value("Felipe"))
+                .andExpect(jsonPath("$[1].id_usuario").value(2))
+                .andExpect(jsonPath("$[1].nome").value("Anna"));
     }
 }

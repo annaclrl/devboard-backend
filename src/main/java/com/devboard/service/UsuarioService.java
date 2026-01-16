@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UsuarioService {
 
@@ -18,5 +20,12 @@ public class UsuarioService {
     public UsuarioResponseDTO salvarUsuario(UsuarioRequestDTO dto) {
         var usuarioSalvo = usuarioRepository.save(UsuarioMapper.toEntity(dto));
         return UsuarioMapper.toResponseDTO(usuarioSalvo);
+    }
+
+    public List<UsuarioResponseDTO> listarTodosUsuarios() {
+        return usuarioRepository.findAll()
+                .stream()
+                .map(UsuarioMapper::toResponseDTO)
+                .toList();
     }
 }
