@@ -2,6 +2,7 @@ package com.devboard.controller;
 
 import com.devboard.dto.usuario.UsuarioRequestDTO;
 import com.devboard.dto.usuario.UsuarioResponseDTO;
+import com.devboard.exception.EntidadeNaoEncontrada;
 import com.devboard.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -83,5 +84,49 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$[0].nome").value("Felipe"))
                 .andExpect(jsonPath("$[1].id_usuario").value(2))
                 .andExpect(jsonPath("$[1].nome").value("Anna"));
+    }
+
+    @Test
+    void deveBuscarUsuarioPorIdComSucesso() throws Exception {
+
+        // arrange
+        Long id = 1L;
+
+        UsuarioResponseDTO usuario = new UsuarioResponseDTO(
+                id,
+                "Felipe",
+                "felipe@email.com",
+                "123456"
+        );
+
+        when(usuarioService.buscarUsuarioPorId(id)).thenReturn(usuario);
+
+        // act & assert
+        mockMvc.perform(get("/usuarios/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id_usuario").value(1))
+                .andExpect(jsonPath("$.nome").value("Felipe"))
+                .andExpect(jsonPath("$.email").value("felipe@email.com"));
+    }
+
+    @Test
+    void deveRetornarNotFoundQuandoUsuarioNaoExistir() throws Exception {
+
+        // arrange
+        Long id = 99L;
+
+        when(usuarioService.buscarUsuarioPorId(id))
+                .thenThrow(new EntidadeNaoEncontrada(
+                        "Usuário com id 99 não encontrado!"
+                ));
+
+        // act & assert
+        mockMvc.perform(get("/usuarios/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message")
+                        .value("Usuário com id 99 não encontrado!"));
     }
 }

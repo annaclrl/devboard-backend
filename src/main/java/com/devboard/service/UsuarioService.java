@@ -2,6 +2,7 @@ package com.devboard.service;
 
 import com.devboard.dto.usuario.UsuarioRequestDTO;
 import com.devboard.dto.usuario.UsuarioResponseDTO;
+import com.devboard.exception.EntidadeNaoEncontrada;
 import com.devboard.mapper.UsuarioMapper;
 import com.devboard.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
@@ -27,5 +28,12 @@ public class UsuarioService {
                 .stream()
                 .map(UsuarioMapper::toResponseDTO)
                 .toList();
+    }
+
+    public UsuarioResponseDTO buscarUsuarioPorId(Long id) {
+        var usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntidadeNaoEncontrada("Usuário com id " + id + " não encontrado!"));
+
+        return UsuarioMapper.toResponseDTO(usuario);
     }
 }

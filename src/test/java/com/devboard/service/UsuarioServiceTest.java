@@ -2,6 +2,7 @@ package com.devboard.service;
 
 import com.devboard.dto.usuario.UsuarioRequestDTO;
 import com.devboard.dto.usuario.UsuarioResponseDTO;
+import com.devboard.exception.EntidadeNaoEncontrada;
 import com.devboard.model.Usuario;
 import com.devboard.repository.UsuarioRepository;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -61,5 +63,44 @@ class UsuarioServiceTest {
         assertEquals(2, resultado.size());
         assertEquals("Felipe", resultado.get(0).getNome());
         verify(usuarioRepository).findAll();
+    }
+
+    @Test
+    void deveBuscarUsuarioPorIdComSucesso() {
+        // arrange
+        Long id = 1L;
+
+        Usuario usuario = new Usuario(id, "Felipe", "felipe@email.com", "123456");
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario));
+
+        // act
+        UsuarioResponseDTO resultado = usuarioService.buscarUsuarioPorId(id);
+
+        // assert
+        assertNotNull(resultado);
+        assertEquals(id, resultado.getId());
+        assertEquals("Felipe", resultado.getNome());
+        assertEquals("felipe@email.com", resultado.getEmail());
+
+        verify(usuarioRepository).findById(id);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoUsuarioNaoEncontrado() {
+        // arrange
+        Long id = 1L;
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.empty());
+
+        // act + assert
+        EntidadeNaoEncontrada exception = assertThrows(
+                EntidadeNaoEncontrada.class,
+                () -> usuarioService.buscarUsuarioPorId(id)
+        );
+
+        assertEquals("Usuário com id 1 não encontrado!", exception.getMessage());
+
+        verify(usuarioRepository).findById(id);
     }
 }
