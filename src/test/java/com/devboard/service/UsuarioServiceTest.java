@@ -103,4 +103,63 @@ class UsuarioServiceTest {
 
         verify(usuarioRepository).findById(id);
     }
+
+    @Test
+    void deveAtualizarUsuarioComSucesso() {
+        // arrange
+        Long id = 1L;
+
+        Usuario usuarioExistente = new Usuario(
+                id,
+                "Felipe",
+                "felipe@email.com",
+                "123456"
+        );
+
+        UsuarioRequestDTO dtoAtualizacao = new UsuarioRequestDTO(
+                "Felipe Atualizado",
+                "felipe.novo@email.com",
+                "654321"
+        );
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuarioExistente));
+
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // act
+        UsuarioResponseDTO resultado = usuarioService.atualizarUsuario(id, dtoAtualizacao);
+
+        // assert
+        assertNotNull(resultado);
+        assertEquals(id, resultado.getId());
+        assertEquals("Felipe Atualizado", resultado.getNome());
+        assertEquals("felipe.novo@email.com", resultado.getEmail());
+
+        verify(usuarioRepository).findById(id);
+        verify(usuarioRepository).save(usuarioExistente);
+    }
+
+    @Test
+    void deveLancarExcecaoAoAtualizarUsuarioInexistente() {
+        // arrange
+        Long id = 1L;
+
+        UsuarioRequestDTO dto = new UsuarioRequestDTO(
+                "Novo Nome",
+                "novo@email.com",
+                "123456"
+        );
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.empty());
+
+        // act + assert
+        EntidadeNaoEncontrada exception = assertThrows(
+                EntidadeNaoEncontrada.class,
+                () -> usuarioService.atualizarUsuario(id, dto)
+        );
+
+        assertEquals("Usuário com id 1 não encontrado!", exception.getMessage());
+
+        verify(usuarioRepository).findById(id);
+    }
 }

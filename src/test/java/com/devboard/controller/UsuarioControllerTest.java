@@ -17,8 +17,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -124,6 +123,86 @@ class UsuarioControllerTest {
         // act & assert
         mockMvc.perform(get("/usuarios/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message")
+                        .value("Usuário com id 99 não encontrado!"));
+    }
+
+    @Test
+    void deveAtualizarUsuarioComSucesso() throws Exception {
+
+        // arrange
+        Long id = 1L;
+
+        UsuarioRequestDTO dto = new UsuarioRequestDTO(
+                "Felipe Atualizado",
+                "felipe.novo@email.com",
+                "654321"
+        );
+
+        UsuarioResponseDTO usuarioAtualizado = new UsuarioResponseDTO(
+                id,
+                "Felipe Atualizado",
+                "felipe.novo@email.com",
+                "654321"
+        );
+
+        when(usuarioService.atualizarUsuario(any(Long.class), any(UsuarioRequestDTO.class)))
+                .thenReturn(usuarioAtualizado);
+
+        // act & assert
+        mockMvc.perform(put("/usuarios/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id_usuario").value(1))
+                .andExpect(jsonPath("$.nome").value("Felipe Atualizado"))
+                .andExpect(jsonPath("$.email").value("felipe.novo@email.com"));
+    }
+
+    @Test
+    void deveRetornarBadRequestAoAtualizarUsuarioComDadosInvalidos() throws Exception {
+
+        // arrange
+        UsuarioRequestDTO dtoInvalido = new UsuarioRequestDTO(
+                "",
+                null,
+                "123456"
+        );
+
+        // act & assert
+        mockMvc.perform(put("/usuarios/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dtoInvalido)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Erro de validação"))
+                .andExpect(jsonPath("$.errors.nome").exists())
+                .andExpect(jsonPath("$.errors.email").exists());
+    }
+
+    @Test
+    void deveRetornarNotFoundAoAtualizarUsuarioInexistente() throws Exception {
+
+        // arrange
+        Long id = 99L;
+
+        UsuarioRequestDTO dto = new UsuarioRequestDTO(
+                "Nome",
+                "email@email.com",
+                "123456"
+        );
+
+        when(usuarioService.atualizarUsuario(any(Long.class), any(UsuarioRequestDTO.class)))
+                .thenThrow(new EntidadeNaoEncontrada(
+                        "Usuário com id 99 não encontrado!"
+                ));
+
+        // act & assert
+        mockMvc.perform(put("/usuarios/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message")
