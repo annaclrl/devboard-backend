@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -203,6 +204,40 @@ class UsuarioControllerTest {
         mockMvc.perform(put("/usuarios/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message")
+                        .value("Usuário com id 99 não encontrado!"));
+    }
+
+    @Test
+    void deveDeletarUsuarioComSucesso() throws Exception {
+
+        // arrange
+        Long id = 1L;
+
+        // por ser void, não precisa de when().thenReturn()
+        // apenas garantir que não lança exceção
+
+        // act & assert
+        mockMvc.perform(delete("/usuarios/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deveRetornarNotFoundAoDeletarUsuarioInexistente() throws Exception {
+
+        // arrange
+        Long id = 99L;
+
+        doThrow(new EntidadeNaoEncontrada(
+                "Usuário com id 99 não encontrado!"
+        )).when(usuarioService).deletarUsuario(id);
+
+        // act & assert
+        mockMvc.perform(delete("/usuarios/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message")

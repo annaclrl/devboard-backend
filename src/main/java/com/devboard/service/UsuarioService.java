@@ -48,6 +48,12 @@ public class UsuarioService {
         return UsuarioMapper.toResponseDTO(usuarioRepository.save(usuarioExistente));
     }
 
+    @Transactional
+    public void deletarUsuario(Long id) {
+        var usuario = buscarEntidadeUsuarioPorId(id);
+        usuarioRepository.delete(usuario);
+    }
+
     private Usuario buscarEntidadeUsuarioPorId(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new EntidadeNaoEncontrada("Usuário com id " + id + " não encontrado!"));

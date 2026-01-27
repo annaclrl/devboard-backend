@@ -162,4 +162,45 @@ class UsuarioServiceTest {
 
         verify(usuarioRepository).findById(id);
     }
+
+    @Test
+    void deveDeletarUsuarioComSucesso() {
+        // arrange
+        Long id = 1L;
+
+        Usuario usuario = new Usuario(
+                id,
+                "Felipe",
+                "felipe@email.com",
+                "123456"
+        );
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario));
+
+        // act
+        usuarioService.deletarUsuario(id);
+
+        // assert
+        verify(usuarioRepository).findById(id);
+        verify(usuarioRepository).delete(usuario);
+    }
+
+    @Test
+    void deveLancarExcecaoAoDeletarUsuarioInexistente() {
+        // arrange
+        Long id = 1L;
+
+        when(usuarioRepository.findById(id))
+                .thenReturn(Optional.empty());
+
+        // act + assert
+        EntidadeNaoEncontrada exception = assertThrows(
+                EntidadeNaoEncontrada.class,
+                () -> usuarioService.deletarUsuario(id)
+        );
+
+        assertEquals("Usuário com id 1 não encontrado!", exception.getMessage());
+
+        verify(usuarioRepository).findById(id);
+    }
 }
