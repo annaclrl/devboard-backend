@@ -30,4 +30,8 @@ public class Usuario {
 
     @Column(nullable = false, length = 50)
     private String senha;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_perfil", nullable = false)
+    private Perfil perfil;
 }
